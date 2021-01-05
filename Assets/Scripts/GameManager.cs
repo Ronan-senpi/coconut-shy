@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    
+
     public static GameManager Instance { get; set; }
     private void Awake()
     {
@@ -16,15 +16,19 @@ public class GameManager : MonoBehaviour
 
     [SerializeField]
     protected Trajectory trajectory;
-
+    [SerializeField]
+    protected Joystick joystick;
     [SerializeField]
     protected Ball Ball;
     [SerializeField]
+    protected GameObject target;
+
+    [SerializeField]
     protected float pushForce = 4f;
 
-    protected bool IsDragging = false;
+    protected bool IsDragging { get { return (joystick && (joystick.Horizontal != 0 || joystick.Vertical != 0)); } }
 
-    protected Vector3 startPoint;
+    protected Vector3 startPoint = Vector3.zero;
     protected Vector3 endPoint;
     protected Vector3 direction;
     protected Vector3 force;
@@ -33,21 +37,27 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         Cam = Camera.main;
+        endPoint = Ball.transform.position;
+        startPoint = new Vector3(endPoint.x, endPoint.y, 0);
         Ball.DesactivateRb();
+        //OnDragStart();
     }
+
+
 
     // Update is called once per frame
     void Update()
     {
+
+        Debug.DrawLine(Ball.transform.position, Vector3.forward, Color.blue);
         //Change for tactile :scream:
-        if (Input.GetMouseButtonDown(0))
-        {
-            IsDragging = true;
-            OnDragStart();
-        }
+        if (joystick)
+            {
+
+                OnDragStart();
+            }
         if (Input.GetMouseButtonUp(0))
         {
-            IsDragging = false;
             OnDragEnd();
         }
         if (IsDragging)
@@ -58,15 +68,14 @@ public class GameManager : MonoBehaviour
     #region Begin : Drag
     protected void OnDragStart()
     {
-       
+
         Ball.DesactivateRb();
-        startPoint = Cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Cam.transform.position.z));
         trajectory.Show();
     }
 
     protected void OnDrag()
     {
-        endPoint = Cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Cam.transform.position.z));
+        //endPoint = Cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Cam.transform.position.z));
         distance = Vector2.Distance(startPoint, endPoint);
         direction = (startPoint - endPoint).normalized;
         force = direction * distance * pushForce;
