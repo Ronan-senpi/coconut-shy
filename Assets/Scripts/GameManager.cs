@@ -33,6 +33,8 @@ public class GameManager : MonoBehaviour
     protected Vector3 direction;
     protected Vector3 force;
     protected float distance;
+    private bool clicked;
+    Vector3 lookAtPosition;
     // Start is called before the first frame update
     void Start()
     {
@@ -48,17 +50,15 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        Debug.DrawLine(Ball.transform.position, Vector3.forward, Color.blue);
+        lookAtPosition = Cam.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Cam.nearClipPlane));
+        Debug.DrawLine(Cam.transform.position, lookAtPosition);
         //Change for tactile :scream:
         if (joystick)
-            {
+        {
 
-                OnDragStart();
-            }
+        }
         if (Input.GetMouseButtonUp(0))
         {
-            OnDragEnd();
         }
         if (IsDragging)
         {
@@ -76,9 +76,7 @@ public class GameManager : MonoBehaviour
     protected void OnDrag()
     {
         //endPoint = Cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Cam.transform.position.z));
-        distance = Vector2.Distance(startPoint, endPoint);
-        direction = (startPoint - endPoint).normalized;
-        force = direction * distance * pushForce;
+
         //For debug
         Debug.DrawLine(startPoint, endPoint, Color.red);
         trajectory.UpdateDots(Ball.Pos, force);
@@ -86,11 +84,27 @@ public class GameManager : MonoBehaviour
 
     protected void OnDragEnd()
     {
-        Debug.Log(direction);
+        distance = Vector2.Distance(lookAtPosition, Ball.transform.position);
+        direction = (Ball.transform.position - lookAtPosition).normalized;
+        Debug.LogWarning(distance);
+        force = direction * distance * pushForce;
         Ball.ActivateRb();
         Ball.Push(force);
         trajectory.Hide();
     }
 
     #endregion End : Drag
+
+    public void Click()
+    {
+        OnDragStart();
+        clicked = true;
+    }
+    public void Unclick()
+    {
+
+        OnDragEnd();
+
+        clicked = false;
+    }
 }

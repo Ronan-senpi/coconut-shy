@@ -17,6 +17,8 @@ public class Ball : MonoBehaviour
 
     public void Push(Vector3 force)
     {
+        ActivateRb();
+        transform.parent = null;
         Rb.AddForce(force, ForceMode.Impulse);
     }
     public void ActivateRb()
@@ -26,8 +28,8 @@ public class Ball : MonoBehaviour
 
     public void DesactivateRb()
     {
-        Rb.velocity = Vector3.zero;
-        Rb.angularVelocity = Vector3.zero;
+        //Rb.velocity = Vector3.zero;
+        //Rb.angularVelocity = Vector3.zero;
         Rb.isKinematic = true;
 
     }

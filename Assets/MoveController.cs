@@ -26,7 +26,7 @@ public class MoveController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.LogError((transform.position.y + joystick.Vertical) * speed * Time.deltaTime);
+        //Debug.LogError((transform.position.y + joystick.Vertical) * speed * Time.deltaTime);
         if (joystick && (joystick.Horizontal != 0 || joystick.Vertical != 0))
         {
             Vector3 v = new Vector3(Mathf.Clamp((transform.position.x + joystick.Horizontal) * speed, minX, maxX),
