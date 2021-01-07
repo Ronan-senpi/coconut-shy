@@ -11,7 +11,7 @@ public class VictoryController : MonoBehaviour
         //Compare sur les bit et non sur la text plus rapide
         if ((layerMask.value & (1 << other.gameObject.layer)) > 0)
         {
-            GameManager.Instance.AddCan(gameObject.name);
+            GameManager.Instance.AddCan(other.gameObject.name);
         }
     }
 }

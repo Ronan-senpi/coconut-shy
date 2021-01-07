@@ -169,7 +169,6 @@ public class GameManager : MonoBehaviour
         if (!cansList.Any(x => x == name))
         {
             cansList.Add(name);
-            Debug.Log(name);
         }
         if (cansList.Count == 6)
         {
