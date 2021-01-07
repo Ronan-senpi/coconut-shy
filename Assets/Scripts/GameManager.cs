@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -15,24 +17,29 @@ public class GameManager : MonoBehaviour
     Camera Cam;
 
     [SerializeField]
-    protected Trajectory trajectory;
-    [SerializeField]
-    protected Joystick joystick;
+    protected Transform Cans;
+
     [SerializeField]
     protected Ball Ball;
-    [SerializeField]
-    protected GameObject target;
+    Vector3 ballPosition;
+    List<string> cansList = new List<string>();
+
 
     [SerializeField]
-    protected float pushForce = 4f;
+    protected StrengthBarController sbc;
 
-    protected bool IsDragging { get { return (joystick && (joystick.Horizontal != 0 || joystick.Vertical != 0)); } }
+    [SerializeField]
+    protected float pushStrenght = 4f;
+    [SerializeField]
+    protected float increaseStrenght;
+
+    protected bool IsIncrease = true;
 
     protected Vector3 startPoint = Vector3.zero;
     protected Vector3 endPoint;
     protected Vector3 direction;
     protected Vector3 force;
-    protected float distance;
+
     private bool clicked;
     Vector3 lookAtPosition;
     // Start is called before the first frame update
@@ -40,6 +47,7 @@ public class GameManager : MonoBehaviour
     {
         Cam = Camera.main;
         endPoint = Ball.transform.position;
+        ballPosition = Ball.transform.position;
         startPoint = new Vector3(endPoint.x, endPoint.y, 0);
         Ball.DesactivateRb();
         //OnDragStart();
@@ -50,47 +58,57 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        lookAtPosition = Cam.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Cam.nearClipPlane));
-        Debug.DrawLine(Cam.transform.position, lookAtPosition);
-        //Change for tactile :scream:
-        if (joystick)
-        {
 
-        }
-        if (Input.GetMouseButtonUp(0))
+        lookAtPosition = Cam.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Cam.farClipPlane));
+        var tmp = (lookAtPosition - Ball.transform.position);
+        tmp.y += 10f;
+        Debug.DrawLine(Ball.transform.position, tmp, Color.blue);
+        if (clicked)
         {
+            StrenghtUpdate();
         }
-        if (IsDragging)
-        {
-            OnDrag();
-        }
+
+
     }
+
+    void StrenghtUpdate()
+    {
+        if (pushStrenght + increaseStrenght * Time.deltaTime > sbc.MaxValue)
+        {
+            IsIncrease = false;
+        }
+        else if (pushStrenght - increaseStrenght * Time.deltaTime < sbc.MinValue )
+        {
+            IsIncrease = true;
+        }
+        if (IsIncrease)
+        {
+            pushStrenght += increaseStrenght * Time.deltaTime;
+        }
+        else
+        {
+            pushStrenght -= increaseStrenght * Time.deltaTime;
+        }
+        sbc.SetStrength(pushStrenght);
+    }
+    void StrenghtReset()
+    {
+        sbc.ResetStrength();
+    }
+
     #region Begin : Drag
     protected void OnDragStart()
     {
-
         Ball.DesactivateRb();
-        trajectory.Show();
-    }
-
-    protected void OnDrag()
-    {
-        //endPoint = Cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Cam.transform.position.z));
-
-        //For debug
-        Debug.DrawLine(startPoint, endPoint, Color.red);
-        trajectory.UpdateDots(Ball.Pos, force);
     }
 
     protected void OnDragEnd()
     {
-        distance = Vector2.Distance(lookAtPosition, Ball.transform.position);
-        direction = (Ball.transform.position - lookAtPosition).normalized;
-        Debug.LogWarning(distance);
-        force = direction * distance * pushForce;
+        direction = (lookAtPosition - Ball.transform.position).normalized;
+        direction.y += 0.5f;
+        force = direction * pushStrenght;
         Ball.ActivateRb();
         Ball.Push(force);
-        trajectory.Hide();
     }
 
     #endregion End : Drag
@@ -102,9 +120,73 @@ public class GameManager : MonoBehaviour
     }
     public void Unclick()
     {
-
+        StrenghtReset();
         OnDragEnd();
-
+        StartCoroutine(ResetBallC());
         clicked = false;
     }
+    IEnumerator ResetBallC()
+    {
+        yield return new WaitForSeconds(3f);
+        ResetBall();
+    }
+    void ResetBall()
+    {
+        Ball.transform.parent = Cam.transform;
+        Ball.transform.position = ballPosition;
+        Ball.DesactivateRb();
+    }
+    public void OnTargetFound()
+    {
+        int cc = Cans.childCount;
+        for (int i = 0; i < cc; i++)
+        {
+            Transform can = Cans.GetChild(i);
+            Rigidbody rb;
+            if (can.TryGetComponent<Rigidbody>(out rb))
+            {
+                rb.isKinematic = false;
+            }
+        }
+    }
+
+    public void OnTargetLost()
+    {
+        int cc = Cans.childCount;
+        for (int i = 0; i < cc; i++)
+        {
+            Transform can = Cans.GetChild(i);
+            Rigidbody rb;
+            if (can.TryGetComponent<Rigidbody>(out rb))
+            {
+                rb.isKinematic = true;
+            }
+        }
+    }
+
+    public void AddCan(string name)
+    {
+        if (!cansList.Any(x => x == name))
+        {
+            cansList.Add(name);
+            Debug.Log(name);
+        }
+        if (cansList.Count == 6)
+        {
+            EndGame(true);
+        }
+    }
+
+    private void EndGame(bool isVectory)
+    {
+        if (isVectory)
+        {
+            Debug.LogWarning("isVectory");
+        }
+        else
+        {
+
+        }
+    }
+
 }
