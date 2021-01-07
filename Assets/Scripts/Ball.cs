@@ -6,15 +6,25 @@ public class Ball : MonoBehaviour
 {
 
     public Rigidbody Rb { get; set; }
-    public SphereCollider Col { get; set; }
+    public BoxCollider Col { get; set; }
     public Vector3 Pos { get { return transform.position; } }
-
+    protected MeshRenderer mr;
     private void Awake()
     {
+        mr = GetComponent<MeshRenderer>();
+        mr.enabled = false;
         Rb = GetComponent<Rigidbody>();
-        Col = GetComponent<SphereCollider>();
+        Col = GetComponent<BoxCollider>();
     }
-
+    private void Start()
+    {
+        StartCoroutine(ActiveMeshRenderer());
+    }
+    IEnumerator ActiveMeshRenderer()
+    {
+        yield return new WaitForSeconds(1.6f);
+        mr.enabled = true;
+    }
     public void Push(Vector3 force)
     {
         ActivateRb();

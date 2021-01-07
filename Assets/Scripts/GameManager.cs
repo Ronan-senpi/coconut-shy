@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -21,7 +22,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField]
     protected Ball Ball;
-    Vector3 ballPosition;
+    [SerializeField]
+    Transform ballPosition;
     List<string> cansList = new List<string>();
 
 
@@ -32,6 +34,9 @@ public class GameManager : MonoBehaviour
     protected float pushStrenght = 4f;
     [SerializeField]
     protected float increaseStrenght;
+
+    [SerializeField]
+    protected Animator transitionAnimator;
 
     protected bool IsIncrease = true;
 
@@ -47,7 +52,6 @@ public class GameManager : MonoBehaviour
     {
         Cam = Camera.main;
         endPoint = Ball.transform.position;
-        ballPosition = Ball.transform.position;
         startPoint = new Vector3(endPoint.x, endPoint.y, 0);
         Ball.DesactivateRb();
         //OnDragStart();
@@ -58,7 +62,10 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (cansList.Count == 6)
+        {
+            EndGame(true);
+        }
         lookAtPosition = Cam.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Cam.farClipPlane));
         var tmp = (lookAtPosition - Ball.transform.position);
         tmp.y += 10f;
@@ -133,7 +140,7 @@ public class GameManager : MonoBehaviour
     void ResetBall()
     {
         Ball.transform.parent = Cam.transform;
-        Ball.transform.position = ballPosition;
+        Ball.transform.position = ballPosition.position;
         Ball.DesactivateRb();
     }
     public void OnTargetFound()
@@ -180,12 +187,17 @@ public class GameManager : MonoBehaviour
     {
         if (isVectory)
         {
-            Debug.LogWarning("isVectory");
+            StartCoroutine(GoToScreenVictory());
         }
         else
         {
-
+            //Tout le monde peut gagner a mon jeux ! Ceci est un partie pris
         }
     }
-
+    IEnumerator GoToScreenVictory()
+    {
+        transitionAnimator.Play(0);
+        yield return new WaitForSeconds(0.8f);
+        SceneManager.LoadScene("Victory");
+    }
 }
